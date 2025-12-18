@@ -193,20 +193,20 @@ void TIM3_IRQHandler(void) {
   *         The distance is calculated as: distance = (0.034 * time_difference) / 2
   *         Division by 2 accounts for the round trip of the sound wave.
   * 
+  * @note   Global variables used by this function:
+  *         - inicio_tiempo_trigger: Start time of trigger pulse
+  *         - final_tiempo_trigger: End time of trigger pulse
+  *         - inicio_tiempo_echo: Start time of echo reception
+  *         - final_tiempo_echo: End time of echo reception
+  *         - diferencia_tiempo: Calculated time difference
+  *         - distancia: Measured distance in centimeters (updated by this function)
+  *         - estado: Function state flag (set to 0 after measurement)
+  * 
   * @pre    estado must be set to 1 before calling this function.
   * @post   Updates the global 'distancia' variable with the measured distance in cm.
   *         Sets estado to 0 after measurement is complete.
   * 
   * @retval None
-  * 
-  * @globals 
-  *   - inicio_tiempo_trigger: Start time of trigger pulse
-  *   - final_tiempo_trigger: End time of trigger pulse
-  *   - inicio_tiempo_echo: Start time of echo reception
-  *   - final_tiempo_echo: End time of echo reception
-  *   - diferencia_tiempo: Calculated time difference
-  *   - distancia: Measured distance in centimeters
-  *   - estado: Function state flag
   */
 	void medirDistancia(){
 
