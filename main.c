@@ -127,8 +127,15 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 
-//Interrupción asociada a un contador en modo TOC que usamos para contar el tiempo en el sesnor de ultrasonidos
-
+/**
+  * @brief  Timer 2 Interrupt Handler for ultrasonic sensor timing.
+  * @details This interrupt handler is associated with a counter in TOC mode used to 
+  *          measure time intervals for the ultrasonic sensor. It triggers periodically
+  *          to enable distance measurements.
+  * @note   The timer automatically reloads with tiempototal (~60000) to maintain 
+  *         periodic triggering for sensor readings.
+  * @retval None
+  */
 void TIM2_IRQHandler(void) {
 
    if ((TIM2->SR & 0x0004)!=0) {
@@ -142,8 +149,14 @@ void TIM2_IRQHandler(void) {
    }
 
 
-//Interrupción usada para el zumbador, cada 0.5 segundos suena
-
+/**
+  * @brief  Timer 3 Interrupt Handler for buzzer control.
+  * @details This interrupt handler controls the buzzer operation by toggling its 
+  *          state every 0.5 seconds (500ms). The buzzer alternates between on and 
+  *          off states based on the estado_zumbador flag.
+  * @note   The timer period is defined by the 'time' constant (~500ms).
+  * @retval None
+  */
 void TIM3_IRQHandler(void) {
    if ((TIM3->SR & 0x0004)!=0) {
 
@@ -167,6 +180,34 @@ void TIM3_IRQHandler(void) {
 
 
 
+/**
+  * @brief  Measures distance using the HC-SR04 ultrasonic sensor.
+  * @details This function implements the complete measurement cycle for the ultrasonic 
+  *          distance sensor:
+  *          1. Sends a 10μs trigger pulse on PD2 (TRIGGER pin)
+  *          2. Waits for and captures the ECHO signal on PA5
+  *          3. Calculates the time difference between echo start and end
+  *          4. Converts the time to distance using the speed of sound (0.034 cm/μs)
+  * 
+  * @note   This function should only be called when estado == 1 (ready state).
+  *         The distance is calculated as: distance = (0.034 * time_difference) / 2
+  *         Division by 2 accounts for the round trip of the sound wave.
+  * 
+  * @note   Global variables used by this function:
+  *         - inicio_tiempo_trigger: Start time of trigger pulse
+  *         - final_tiempo_trigger: End time of trigger pulse
+  *         - inicio_tiempo_echo: Start time of echo reception
+  *         - final_tiempo_echo: End time of echo reception
+  *         - diferencia_tiempo: Calculated time difference
+  *         - distancia: Measured distance in centimeters (updated by this function)
+  *         - estado: Function state flag (set to 0 after measurement)
+  * 
+  * @pre    estado must be set to 1 before calling this function.
+  * @post   Updates the global 'distancia' variable with the measured distance in cm.
+  *         Sets estado to 0 after measurement is complete.
+  * 
+  * @retval None
+  */
 	void medirDistancia(){
 
 		  if(estado == 1){
@@ -1234,6 +1275,20 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief  UART Receive Complete Callback.
+  * @details This callback function is automatically called by the HAL when a UART 
+  *          reception is complete. It re-enables the UART reception interrupt to 
+  *          continue receiving data.
+  * 
+  * @param  huart: Pointer to the UART handle structure that contains the 
+  *                configuration information for the specified UART module.
+  * 
+  * @note   After processing the received byte in 'texto', this function 
+  *         reactivates the interrupt-driven reception to wait for the next byte.
+  * 
+  * @retval None
+  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   HAL_UART_Receive_IT(huart, texto, 1); // Vuelve a activar Rx por haber acabado
